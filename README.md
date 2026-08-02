@@ -77,7 +77,7 @@ A modelagem inicial é composta pelas seguintes entidades:
 ### Backend
 
 - [x] Configuração do FastAPI
-- [ ] CRUD de Categorias
+- [x] CRUD de Categorias
 - [ ] CRUD de Produtos
 - [ ] CRUD de Movimentações
 - [ ] Implementação das regras de negócio
