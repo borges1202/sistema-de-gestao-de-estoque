@@ -1,6 +1,6 @@
 # Sistema de Gestão de Estoque
 
-API REST desenvolvida com **FastAPI** e **SQLite** para gerenciamento de estoque. O projeto está sendo desenvolvido com foco em boas práticas de arquitetura, validação de dados e organização do código.
+API REST desenvolvida com FastAPI e SQLite para gerenciamento de estoque, construída com foco em organização, boas práticas e escalabilidade.
 
 ## Tecnologias
 
@@ -10,54 +10,64 @@ API REST desenvolvida com **FastAPI** e **SQLite** para gerenciamento de estoque
 - Pydantic
 - Uvicorn
 
-## Estrutura do Projeto
-
-```
-app/
-├── database/
-│   ├── connection.py
-│   └── database.db
-├── routers/
-│   └── categorias.py
-├── schemas/
-│   └── categoria.py
-└── main.py
-```
-
-## Funcionalidades Implementadas
+## Funcionalidades
 
 ### Categorias
 
 - Criar categoria
-- Listar todas as categorias
+- Listar categorias
 - Buscar categoria por ID
 - Atualizar categoria
 - Excluir categoria
+- Tratamento de exceções
+- Response Models
+- Validação de dados
 
-### Validações
+### Produtos
 
-- Validação de entrada utilizando Pydantic.
-- Respostas padronizadas com `CategoriaResponse`.
-- Tratamento de exceções utilizando `HTTPException`.
-- Tratamento de erros do SQLite (`IntegrityError` e `OperationalError`).
-- Fechamento seguro das conexões com o banco utilizando `try`, `except` e `finally`.
-- Suporte a chaves estrangeiras (`PRAGMA foreign_keys = ON`).
+- Criar produto
+- Listar produtos
+- Buscar produto por ID
+- Atualizar produto
+- Excluir produto
+- Validação de categoria existente
+- SKU único
+- Normalização automática do SKU para maiúsculas
+- Estoque mínimo validado
+- Response Models
+- Tratamento de exceções
 
-## Status HTTP utilizados
+## Status HTTP
 
-| Método | Endpoint | Status |
-|---------|----------|--------|
-| POST | `/categorias` | 201 Created |
-| GET | `/categorias` | 200 OK |
-| GET | `/categorias/{id}` | 200 OK / 404 Not Found |
-| PUT | `/categorias/{id}` | 200 OK / 404 Not Found / 409 Conflict |
-| DELETE | `/categorias/{id}` | 204 No Content / 404 Not Found / 409 Conflict |
+| Código | Descrição |
+|---------|-----------|
+| 200 | Requisição realizada com sucesso |
+| 201 | Recurso criado |
+| 204 | Recurso removido |
+| 404 | Recurso não encontrado |
+| 409 | Conflito de dados |
+| 422 | Erro de validação |
+| 500 | Erro interno do servidor |
 
-## Próximos passos
+## Estrutura
 
-- CRUD de Produtos
-- CRUD de Usuários
-- CRUD de Movimentações
+```
+app/
+├── database/
+├── routers/
+│   ├── categorias.py
+│   └── produtos.py
+├── schemas/
+│   ├── categoria.py
+│   └── produto.py
+└── main.py
+```
+
+## Próximas etapas
+
+- Movimentações de estoque
+- Controle de usuários
+- Histórico de movimentações
 - Autenticação
 - Testes automatizados
 - Docker

@@ -19,7 +19,7 @@ def criar_categoria(categoria: CategoriaCreate):
         ''',(categoria.nome, categoria.descricao))
 
         conexao.commit()
-        return {'mensagem':'categoria criada com sucesso'}
+        return {'mensagem':'Categoria criada com sucesso.'}
     
     except IntegrityError:
         if conexao is not None:
@@ -103,7 +103,6 @@ def listar_categoria_id(id:int):
 def atualizar_categoria(id: int, categoria: CategoriaCreate):
     conexao = None
     try:
-
         conexao = conectar()
         cursor = conexao.cursor()
 
@@ -116,7 +115,7 @@ def atualizar_categoria(id: int, categoria: CategoriaCreate):
 
         if cursor.rowcount > 0:
             conexao.commit()
-            return {'mensagem':'Categoria atualizada com sucesso'}
+            return {'mensagem':'Categoria atualizada com sucesso.'}
         
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -126,7 +125,7 @@ def atualizar_categoria(id: int, categoria: CategoriaCreate):
         if conexao is not None:
             conexao.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='Registro duplicado')
+                            detail='Registro duplicado.')
 
     except OperationalError:
         if conexao is not None:
@@ -160,7 +159,7 @@ def deletar_categoria(id:int):
         if conexao is not None:
             conexao.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='Essa categoria possui produtos vinculados')
+                            detail='Essa categoria possui produtos vinculados.')
         
     except OperationalError:
         if conexao is not None:
