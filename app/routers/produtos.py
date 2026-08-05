@@ -102,7 +102,7 @@ def listar_produto_id(id:int):
         resultado = cursor.fetchone()
         if resultado is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail='Produto não encontrada.')
+                                detail='Produto não encontrado.')
         
         id, nome, sku, descricao, quantidade, estoque_minimo, categoria_id, ativo, criado_em, atualizado_em = resultado
         return {'id':id,
