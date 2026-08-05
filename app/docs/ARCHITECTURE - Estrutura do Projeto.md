@@ -8,30 +8,35 @@ estoque/
 ├── app/
 │   │
 │   ├── main.py
-│   │   Responsável por iniciar a aplicação FastAPI.
+│   │   Inicializa a aplicação FastAPI.
 │   │
-│   ├── database.py
-│   │   Configuração da conexão com o banco SQLite.
+│   ├── database/
+│   │   │
+│   │   ├── connection.py
+│   │   │   Responsável pela conexão com o banco SQLite.
+│   │   │
+│   │   ├── init_db.py
+│   │   │   Criação das tabelas do banco.
+│   │   │
+│   │   └── database.db
+│   │       Banco de dados SQLite.
 │   │
-│   ├── models.py
-│   │   Modelos (tabelas) do banco de dados.
+│   ├── routers/
+│   │   │
+│   │   ├── categorias.py
+│   │   │   CRUD de categorias.
+│   │   │
+│   │   ├── produtos.py
+│   │   │   CRUD de produtos.
+│   │   │
+│   │   └── movimentacoes.py
+│   │       Registro e consulta das movimentações de estoque.
 │   │
-│   ├── schemas.py
-│   │   Validação dos dados de entrada e saída.
-│   │
-│   ├── crud.py
-│   │   Operações de Create, Read, Update e Delete.
-│   │
-│   └── routers/
+│   └── schemas/
 │       │
-│       ├── categorias.py
-│       │   Rotas relacionadas às categorias.
-│       │
-│       ├── produtos.py
-│       │   Rotas relacionadas aos produtos.
-│       │
+│       ├── categoria.py
+│       ├── produto.py
 │       └── movimentacoes.py
-│           Rotas relacionadas às movimentações.
 │
 ├── docs/
 │   │
@@ -39,70 +44,85 @@ estoque/
 │   ├── ARCHITECTURE.md
 │   └── DATABASE.md
 │
-├── tests/
-│   Testes do projeto.
-│
-├── requirements.txt
-│   Dependências do projeto.
-│
 ├── README.md
-│   Documentação principal.
-│
+├── requirements.txt
 └── .gitignore
-    Arquivos ignorados pelo Git.
 ```
 
 ---
 
-## Arquitetura
+# Arquitetura
 
 ```text
 Cliente
-   ↓
-Rotas (FastAPI)
-   ↓
+    │
+    ▼
+FastAPI (Routers)
+    │
+    ▼
 Schemas (Validação)
-   ↓
-CRUD
-   ↓
+    │
+    ▼
+Regras de Negócio
+    │
+    ▼
 SQLite
 ```
 
 ---
 
-## Módulos
+# Módulos Implementados
 
-### Categorias
+## Categorias
 
-- Cadastro
-- Edição
-- Listagem
+- CRUD completo
+- Validação de dados
+- Tratamento de exceções
+- Response Models
 
-### Produtos
+## Produtos
 
-- Cadastro
-- Edição
-- Busca
-- Desativação
+- CRUD completo
+- SKU único
+- Controle de estoque mínimo
+- Validação de categoria
+- Response Models
 
-### Movimentações
+## Movimentações
 
-- Entrada
-- Saída
-- Ajuste
-- Histórico
+- Registro de entrada
+- Registro de saída
+- Atualização automática do estoque
+- Histórico de movimentações
+- Validação de usuário
+- Validação de produto ativo
+- Bloqueio de estoque insuficiente
+- Controle transacional (commit / rollback)
 
 ---
 
-## Ordem de Desenvolvimento
+# Próximas Evoluções
 
-1. PRD
-2. ARCHITECTURE.md
-3. DATABASE.md
-4. Estrutura do projeto
-5. Banco de dados
-6. Rotas
-7. Funcionalidades
-8. Testes
-9. README
-10. Publicação
+- CRUD de usuários
+- Soft Delete para produtos
+- Soft Delete para categorias
+- Autenticação JWT
+- Controle de permissões
+- Testes automatizados
+- Docker
+- PostgreSQL
+
+---
+
+# Ordem de Desenvolvimento
+
+- [x] PRD
+- [x] Arquitetura
+- [x] Banco de Dados
+- [x] CRUD de Categorias
+- [x] CRUD de Produtos
+- [x] Movimentações
+- [ ] CRUD de Usuários
+- [ ] Autenticação
+- [ ] Testes
+- [ ] Deploy

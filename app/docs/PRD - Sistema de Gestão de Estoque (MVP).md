@@ -1,8 +1,8 @@
 # PRD — Sistema de Gestão de Estoque
 
-**Versão:** MVP (0.1)  
+**Versão:** MVP (0.2)  
 **Autor:** Arthur Borges  
-**Status:** Em planejamento
+**Status:** Em desenvolvimento
 
 ---
 
@@ -10,169 +10,123 @@
 
 ## Objetivo
 
-Desenvolver um sistema web de gestão de estoque voltado para micro e pequenas empresas que precisam controlar seus produtos de maneira simples, intuitiva e confiável.
-
-O foco da primeira versão é resolver o problema principal: registrar produtos e controlar as movimentações de estoque sem depender de planilhas.
+Desenvolver um sistema web de gestão de estoque para micro e pequenas empresas, permitindo controlar produtos, categorias e movimentações de estoque de forma simples, segura e confiável.
 
 ---
 
 # 2. Problema
 
-Muitas microempresas utilizam planilhas ou controles manuais para gerenciar o estoque.
+Grande parte das pequenas empresas ainda utiliza planilhas ou controles manuais para administrar o estoque.
 
-Isso gera:
+Isso ocasiona:
 
-- Erros de preenchimento;
-- Divergência entre estoque físico e registrado;
-- Falta de histórico;
-- Dificuldade para identificar quem realizou alterações;
-- Perda de tempo.
-
-Além disso, muitos sistemas existentes são complexos para empresas pequenas.
+- Divergência entre estoque físico e sistema;
+- Falta de histórico das alterações;
+- Dificuldade em identificar responsáveis pelas movimentações;
+- Baixa produtividade;
+- Alto índice de erros.
 
 ---
 
 # 3. Público-alvo
 
 - Pequenos comércios
-- Lojas de bairro
 - Assistências técnicas
 - Empresas familiares
 - Microempresas
-
-## Perfil
-
-- Pouco conhecimento técnico
-- Necessidade de rapidez
-- Pouco tempo para treinamento
+- Lojas de bairro
 
 ---
 
-# 4. Objetivos
-
-O sistema deve permitir:
-
-- Cadastrar categorias
-- Cadastrar produtos
-- Registrar entradas
-- Registrar saídas
-- Consultar estoque
-- Consultar histórico
-- Saber quem realizou cada movimentação
-
----
-
-# 5. Princípios
-
-- Interface simples e intuitiva
-- Poucos cliques
-- Todas as movimentações registradas
-- Nunca permitir estoque negativo
-- Priorizar simplicidade e confiabilidade
-
----
-
-# 6. Escopo do MVP
+# 4. Funcionalidades Implementadas
 
 ## Categorias
 
-- Cadastrar
-- Editar
-- Listar
+- Cadastro
+- Listagem
+- Consulta por ID
+- Atualização
+- Exclusão
 
 ## Produtos
 
-- Cadastrar
-- Editar
-- Listar
-- Buscar
-- Desativar
+- Cadastro
+- Listagem
+- Consulta por ID
+- Atualização
+- Exclusão
+- SKU único
+- Controle de estoque mínimo
 
 ## Movimentações
 
-- Registrar entrada
-- Registrar saída
-- Registrar ajuste
-- Registrar responsável
-- Registrar data e horário
-- Impedir estoque negativo
-
-## Histórico
-
-- Listar movimentações
-- Filtrar por produto
-- Filtrar por período
+- Registro de entrada
+- Registro de saída
+- Atualização automática do estoque
+- Histórico das movimentações
+- Registro do usuário responsável
+- Validação de estoque insuficiente
 
 ---
 
-# 7. Fora do Escopo
+# 5. Regras de Negócio
 
-- Login
-- Cadastro de usuários
-- Controle de permissões
-- Dashboard
-- Docker
-- PostgreSQL
-- API pública
-- Código de barras
-- QR Code
-- Controle financeiro
-- Relatórios avançados
-- Aplicativo mobile
-- Multiempresa
-
----
-
-# 8. Regras de Negócio
-
-- Nome do produto obrigatório
-- SKU único
-- Todo produto pertence a uma categoria
-- Nenhuma saída pode deixar o estoque negativo
-- Toda movimentação registra responsável, data, horário e tipo
-- Produtos serão desativados, não excluídos
+- SKU deve ser único.
+- Todo produto pertence a uma categoria existente.
+- Todo produto possui estoque mínimo.
+- Produtos inativos não podem receber movimentações.
+- Nenhuma saída pode deixar o estoque negativo.
+- Toda movimentação registra:
+  - Produto
+  - Usuário
+  - Tipo
+  - Quantidade
+  - Estoque anterior
+  - Estoque atual
+  - Observação
+  - Data e hora
 
 ---
 
-# 9. Requisitos Não Funcionais
-
-- Interface intuitiva
-- Código organizado
-- API REST com FastAPI
-- Banco SQLite
-- Estrutura preparada para evoluções
-
----
-
-# 10. Stack Tecnológica
+# 6. Tecnologias
 
 - Python
 - FastAPI
 - SQLite
-- SQLAlchemy
+- Pydantic
 - Git
 - GitHub
 
 ---
 
-# 11. Roadmap
+# 7. Estrutura Atual
 
-## MVP (0.1)
+- CRUD de Categorias
+- CRUD de Produtos
+- Controle de Movimentações
+- Atualização automática do estoque
+- Histórico de movimentações
+- Tratamento de exceções
+- Response Models
+- Validação de dados
 
-- Sistema funcional
+---
 
-## v0.2
+# 8. Funcionalidades Planejadas
+
+## Próxima versão
+
+- CRUD de usuários
+- Soft Delete de produtos
+- Soft Delete de categorias
+
+## Futuramente
 
 - Login
-- Cadastro de usuários
-
-## v0.3
-
-- Permissões
+- JWT
+- Controle de permissões
 - Dashboard
-
-## v1.0
-
+- Relatórios
 - PostgreSQL
 - Docker
 - Testes automatizados
@@ -180,13 +134,13 @@ O sistema deve permitir:
 
 ---
 
-# 12. Critérios de Sucesso
+# 9. Critérios de Sucesso
 
-- Cadastrar categorias
-- Cadastrar produtos
-- Registrar entradas
-- Registrar saídas
-- Impedir estoque negativo
-- Consultar histórico
-- Identificar o responsável por cada movimentação
-- Executar a aplicação localmente
+- CRUD completo de Categorias
+- CRUD completo de Produtos
+- Registro de Entradas
+- Registro de Saídas
+- Atualização automática do estoque
+- Histórico de movimentações
+- Impedimento de estoque negativo
+- API documentada via Swagger
