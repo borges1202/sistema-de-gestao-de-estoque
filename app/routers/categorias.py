@@ -1,12 +1,12 @@
 from sqlite3 import IntegrityError,OperationalError
 from fastapi import APIRouter,HTTPException,status
-from app.schemas.categoria import CategoriaCreate, CategoriaResponse
+from app.schemas.categoria import CategoriaValidation, CategoriaResponse
 from app.database.connection import conectar
 
 router = APIRouter()
 
 @router.post('/categorias', status_code=status.HTTP_201_CREATED)
-def criar_categoria(categoria: CategoriaCreate):
+def criar_categoria(categoria: CategoriaValidation):
     conexao = None
     try:
         conexao = conectar()
@@ -100,7 +100,7 @@ def listar_categoria_id(id:int):
 
 
 @router.put('/categorias/{id}')
-def atualizar_categoria(id: int, categoria: CategoriaCreate):
+def atualizar_categoria(id: int, categoria: CategoriaValidation):
     conexao = None
     try:
         conexao = conectar()

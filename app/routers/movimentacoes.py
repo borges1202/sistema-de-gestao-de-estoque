@@ -2,6 +2,7 @@ from sqlite3 import IntegrityError, OperationalError
 from fastapi import APIRouter, HTTPException, status
 from app.schemas.movimentacoes import MovimentacoesCreate, MovimentacoesResponse
 from app.database.connection import conectar
+from datetime import datetime
 
 router = APIRouter()
 
@@ -32,12 +33,21 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
             )
 
         cursor.execute(
-            """SELECT id FROM usuarios WHERE id = ?""", (movimentacoes.usuario_id,)
+            """SELECT ativo FROM usuarios WHERE id = ?""", (movimentacoes.usuario_id,)
         )
         resultado_usuario = cursor.fetchone()
+
         if resultado_usuario is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Usuario não encontrado"
+            )
+
+        usario_ativo, = resultado_usuario
+
+        if usario_ativo == 0:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Usuario inativo.'
             )
 
         tipo = movimentacoes.tipo
@@ -46,17 +56,19 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
             estoque_atual = estoque_anterior + movimentacoes.quantidade
 
         elif tipo == "SAIDA":
+
             if movimentacoes.quantidade > estoque_anterior:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Estoque insuficiente para realizar a saída.",
                 )
+            
             else:
                 estoque_atual = estoque_anterior - movimentacoes.quantidade
 
         cursor.execute(
-            """UPDATE produtos SET quantidade = ? WHERE id = ?""",
-            (estoque_atual, movimentacoes.produto_id),
+            """UPDATE produtos SET quantidade = ?, atualizado_em = ? WHERE id = ?""",
+            (estoque_atual, datetime.now(), movimentacoes.produto_id),
         )
 
         cursor.execute(
@@ -100,6 +112,7 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
     finally:
         if conexao is not None:
             conexao.close()
+
 
 
 @router.get("/movimentacoes", response_model=list[MovimentacoesResponse])
@@ -148,6 +161,7 @@ def listar_movimentacoes():
     finally:
         if conexao is not None:
             conexao.close()
+
 
 
 @router.get("/movimentacoes/{id}", response_model=MovimentacoesResponse)
