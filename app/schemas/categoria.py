@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class CategoriaCreate(BaseModel):
+class CategoriaValidation(BaseModel):
     nome: str
     descricao: str
 

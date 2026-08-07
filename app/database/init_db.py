@@ -4,10 +4,12 @@ conexao = conectar()
 cursor = conexao.cursor()
 
 
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS usuarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
-    email TEXT UNIQUE,
+    cpf TEXT NOT NULL UNIQUE,
+    telefone TEXT NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
@@ -60,6 +62,7 @@ CREATE TABLE IF NOT EXISTS movimentacoes (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 )
 """)
+
 
 conexao.commit()
 conexao.close()
