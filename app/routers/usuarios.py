@@ -2,6 +2,7 @@ from sqlite3 import IntegrityError,OperationalError
 from fastapi import APIRouter,HTTPException,status
 from app.schemas.usuarios import UsuarioCreate, UsuarioResponse, UsuarioStatusPatch, UsuarioUpdate
 from app.database.connection import conectar
+from app.repositories.usuario_repository import insert_usuario, get_usuarios, get_usuario, put_usuario, patch_usuario
 
 router = APIRouter()
 
@@ -12,8 +13,7 @@ def criar_usuario(usuarios: UsuarioCreate):
         conexao = conectar()
         cursor = conexao.cursor()
         
-        cursor.execute('''INSERT INTO usuarios(nome,cpf,telefone)
-        VALUES(?,?,?)''', (usuarios.nome, usuarios.cpf, usuarios.telefone))
+        insert_usuario(cursor, usuarios.nome, usuarios.cpf, usuarios.telefone)
 
         conexao.commit()
         return {'mensagem':'Usuario criado com sucesso.'}
@@ -45,9 +45,9 @@ def listar_usuarios():
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute('''SELECT id, nome, cpf, telefone, ativo, criado_em FROM usuarios''')
-        resultados = cursor.fetchall()
+        resultados = get_usuarios(cursor)
         resultados_list = []
+
         for resultado in resultados:
              id, nome, cpf, telefone, ativo, criado_em = resultado
              resultado = {
@@ -79,8 +79,7 @@ def listar_usuario(id: int):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute('''SELECT id, nome, cpf, telefone, ativo, criado_em FROM usuarios WHERE id = ?''', (id,))
-        resultado = cursor.fetchone()
+        resultado = get_usuario(cursor, id)
 
         if resultado is None:
             raise HTTPException(
@@ -89,7 +88,6 @@ def listar_usuario(id: int):
             )
 
         id, nome, cpf, telefone, ativo, criado_em = resultado
-
 
         return  {
             'id':id,
@@ -117,11 +115,9 @@ def atualizar_usuario(id: int, usuario: UsuarioUpdate):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute('''UPDATE usuarios
-        SET nome = ?, telefone = ?
-        WHERE id = ?''', (usuario.nome, usuario.telefone, id,))
+        linhas_afetadas = put_usuario(cursor, usuario.nome, usuario.telefone, id)
 
-        if cursor.rowcount > 0:
+        if linhas_afetadas > 0:
             conexao.commit()
             return {'mensagem':'Usuario atualizado com sucesso.'}
         else:
@@ -153,11 +149,11 @@ def status_usuario(id:int, usuarios:UsuarioStatusPatch):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute('''UPDATE usuarios SET ativo = ? WHERE id = ?''', (usuarios.ativo, id,))
+        linhas_afetadas = patch_usuario(cursor, usuarios.ativo, id)
 
-        if cursor.rowcount > 0:
+        if linhas_afetadas > 0:
             conexao.commit()
-            return {'mensagem':f'usuarios {"Ativo" if usuarios.ativo else "Inativo"}'}
+            return {'mensagem':f'Usuario {"Ativo" if usuarios.ativo else "Inativo"}'}
         else:
             if conexao is not None:
                 conexao.rollback()
