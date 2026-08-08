@@ -1,10 +1,11 @@
-from sqlite3 import IntegrityError,OperationalError
-from fastapi import APIRouter,HTTPException,status
+from sqlite3 import IntegrityError, OperationalError
+from fastapi import APIRouter, HTTPException, status
 from app.schemas.usuarios import UsuarioCreate, UsuarioResponse, UsuarioStatusPatch, UsuarioUpdate
 from app.database.connection import conectar
-from app.repositories.usuario_repository import insert_usuario, get_usuarios, get_usuario, put_usuario, patch_usuario
+from app.repositories.usuario_repository import inserir_usuario, buscar_usuarios, buscar_usuario, modificar_usuario, condicao_usuario
 
 router = APIRouter()
+
 
 @router.post('/usuarios', status_code=status.HTTP_201_CREATED)
 def criar_usuario(usuarios: UsuarioCreate):
@@ -12,11 +13,11 @@ def criar_usuario(usuarios: UsuarioCreate):
     try:
         conexao = conectar()
         cursor = conexao.cursor()
-        
-        insert_usuario(cursor, usuarios.nome, usuarios.cpf, usuarios.telefone)
+
+        inserir_usuario(cursor, usuarios.nome, usuarios.cpf, usuarios.telefone)
 
         conexao.commit()
-        return {'mensagem':'Usuario criado com sucesso.'}
+        return {'mensagem': 'Usuario criado com sucesso.'}
 
     except IntegrityError:
         if conexao is not None:
@@ -31,11 +32,10 @@ def criar_usuario(usuarios: UsuarioCreate):
             conexao.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
     finally:
         if conexao is not None:
             conexao.close()
-
 
 
 @router.get('/usuarios', response_model=list[UsuarioResponse])
@@ -45,20 +45,20 @@ def listar_usuarios():
         conexao = conectar()
         cursor = conexao.cursor()
 
-        resultados = get_usuarios(cursor)
+        resultados = buscar_usuarios(cursor)
         resultados_list = []
 
         for resultado in resultados:
-             id, nome, cpf, telefone, ativo, criado_em = resultado
-             resultado = {
-                 'id':id,
-                 'nome':nome,
-                 'cpf':cpf,
-                 'telefone':telefone,
-                 'ativo':ativo,
-                 'criado_em':criado_em
-             }
-             resultados_list.append(resultado)
+            id, nome, cpf, telefone, ativo, criado_em = resultado
+            resultado = {
+                'id': id,
+                'nome': nome,
+                'cpf': cpf,
+                'telefone': telefone,
+                'ativo': ativo,
+                'criado_em': criado_em
+            }
+            resultados_list.append(resultado)
 
         return resultados_list
     except OperationalError:
@@ -70,8 +70,6 @@ def listar_usuarios():
             conexao.close()
 
 
-
-
 @router.get('/usuarios/{id}', response_model=UsuarioResponse)
 def listar_usuario(id: int):
     conexao = None
@@ -79,7 +77,7 @@ def listar_usuario(id: int):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        resultado = get_usuario(cursor, id)
+        resultado = buscar_usuario(cursor, id)
 
         if resultado is None:
             raise HTTPException(
@@ -89,13 +87,13 @@ def listar_usuario(id: int):
 
         id, nome, cpf, telefone, ativo, criado_em = resultado
 
-        return  {
-            'id':id,
-            'nome':nome,
-            'cpf':cpf,
-            'telefone':telefone,
-            'ativo':ativo,
-            'criado_em':criado_em
+        return {
+            'id': id,
+            'nome': nome,
+            'cpf': cpf,
+            'telefone': telefone,
+            'ativo': ativo,
+            'criado_em': criado_em
         }
 
     except OperationalError:
@@ -107,7 +105,6 @@ def listar_usuario(id: int):
             conexao.close()
 
 
-
 @router.put('/usuarios/{id}')
 def atualizar_usuario(id: int, usuario: UsuarioUpdate):
     conexao = None
@@ -115,11 +112,12 @@ def atualizar_usuario(id: int, usuario: UsuarioUpdate):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        linhas_afetadas = put_usuario(cursor, usuario.nome, usuario.telefone, id)
+        linhas_afetadas = modificar_usuario(
+            cursor, usuario.nome, usuario.telefone, id)
 
         if linhas_afetadas > 0:
             conexao.commit()
-            return {'mensagem':'Usuario atualizado com sucesso.'}
+            return {'mensagem': 'Usuario atualizado com sucesso.'}
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -141,19 +139,18 @@ def atualizar_usuario(id: int, usuario: UsuarioUpdate):
             conexao.close()
 
 
-
 @router.patch('/usuarios/{id}/status')
-def status_usuario(id:int, usuarios:UsuarioStatusPatch):
+def status_usuario(id: int, usuarios: UsuarioStatusPatch):
     conexao = None
     try:
         conexao = conectar()
         cursor = conexao.cursor()
 
-        linhas_afetadas = patch_usuario(cursor, usuarios.ativo, id)
+        linhas_afetadas = condicao_usuario(cursor, usuarios.ativo, id)
 
         if linhas_afetadas > 0:
             conexao.commit()
-            return {'mensagem':f'Usuario {"Ativo" if usuarios.ativo else "Inativo"}'}
+            return {'mensagem': f'Usuario {"Ativo" if usuarios.ativo else "Inativo"}'}
         else:
             if conexao is not None:
                 conexao.rollback()
