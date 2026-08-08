@@ -1,8 +1,8 @@
 # Sistema de Gestão de Estoque
 
-API REST desenvolvida com **FastAPI** para gerenciamento de estoque, permitindo o controle de categorias, produtos, usuários e movimentações de entrada e saída.
+API REST para gerenciamento de estoque desenvolvida com **Python e FastAPI**, permitindo o controle de categorias, produtos, usuários e movimentações de entrada e saída.
 
-O projeto tem como objetivo aplicar conceitos de desenvolvimento Back-End, regras de negócio, persistência de dados, arquitetura de APIs REST e boas práticas de desenvolvimento.
+O projeto foi desenvolvido com foco no aprendizado e aplicação de conceitos de desenvolvimento Back-End, incluindo regras de negócio, validação de dados, persistência, integridade referencial, transações e organização em camadas.
 
 ---
 
@@ -26,9 +26,8 @@ O projeto tem como objetivo aplicar conceitos de desenvolvimento Back-End, regra
 - Listagem de categorias
 - Consulta por ID
 - Atualização
-- Exclusão
 - Validação de dados
-- Response Models
+- Validação de relacionamentos com produtos
 
 ### Produtos
 
@@ -36,10 +35,12 @@ O projeto tem como objetivo aplicar conceitos de desenvolvimento Back-End, regra
 - Listagem de produtos
 - Consulta por ID
 - Atualização
-- Exclusão
 - SKU único
 - Controle de estoque mínimo
 - Validação de categoria
+- Ativação e desativação
+- Soft Delete
+- Preservação do histórico após desativação
 
 ### Usuários
 
@@ -49,24 +50,72 @@ O projeto tem como objetivo aplicar conceitos de desenvolvimento Back-End, regra
 - Atualização de nome e telefone
 - CPF obrigatório e único
 - Validação de CPF
-- Ativação e desativação de usuários via `PATCH`
-- Preservação do histórico após desativação
+- Ativação e desativação via `PATCH`
 - Bloqueio de movimentações para usuários inativos
+- Preservação do histórico após desativação
 
 ### Movimentações
 
-- Registro de entrada
-- Registro de saída
+- Registro de entradas
+- Registro de saídas
 - Atualização automática do estoque
 - Histórico de movimentações
 - Registro do usuário responsável
 - Registro do estoque anterior e atual
 - Validação de produto
 - Validação de usuário
-- Bloqueio de movimentações por usuários inativos
-- Bloqueio de movimentações em produtos inativos
+- Bloqueio de produtos inativos
+- Bloqueio de usuários inativos
 - Bloqueio de saídas com estoque insuficiente
 - Controle transacional com `commit` e `rollback`
+
+---
+
+## Arquitetura
+
+O projeto utiliza separação entre a camada HTTP e o acesso aos dados.
+
+```text
+Cliente
+    │
+    ▼
+FastAPI
+    │
+    ▼
+Routers
+    │
+    ▼
+Repositories
+    │
+    ▼
+SQLite
+```
+
+### Routers
+
+Responsáveis por:
+
+- receber as requisições HTTP;
+- utilizar os schemas;
+- aplicar as regras de negócio;
+- controlar respostas e status HTTP;
+- coordenar as operações da aplicação.
+
+### Repositories
+
+Responsáveis pelo acesso aos dados:
+
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+- consultas ao SQLite;
+- retorno dos resultados para os routers.
+
+Essa separação evita que as rotas dependam diretamente das instruções SQL e facilita a manutenção do projeto.
+
+### Schemas
+
+Os schemas Pydantic são responsáveis pela validação e estrutura dos dados de entrada e saída da API.
 
 ---
 
@@ -76,10 +125,18 @@ O projeto tem como objetivo aplicar conceitos de desenvolvimento Back-End, regra
 sistema-de-gestao-de-estoque/
 │
 ├── app/
+│   │
 │   ├── database/
 │   │   ├── connection.py
 │   │   ├── init_db.py
 │   │   └── database.db
+│   │
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── categoria_repository.py
+│   │   ├── produto_repository.py
+│   │   ├── usuario_repository.py
+│   │   └── movimentacao_repository.py
 │   │
 │   ├── routers/
 │   │   ├── categorias.py
@@ -107,48 +164,9 @@ sistema-de-gestao-de-estoque/
 
 ---
 
-## Arquitetura Atual
-
-Atualmente, a aplicação segue o seguinte fluxo:
-
-```text
-Cliente
-    │
-    ▼
-FastAPI (Routers)
-    │
-    ▼
-Schemas (Validação)
-    │
-    ▼
-Regras de Negócio
-    │
-    ▼
-SQLite
-```
-
-O projeto está passando por uma refatoração gradual para separar o acesso ao banco de dados das rotas através da camada de **Repositories**.
-
-Arquitetura planejada após a refatoração:
-
-```text
-Cliente
-    │
-    ▼
-FastAPI (Routers)
-    │
-    ▼
-Repositories
-    │
-    ▼
-SQLite
-```
-
----
-
 ## Banco de Dados
 
-Atualmente o sistema possui quatro entidades principais:
+O sistema possui quatro entidades principais:
 
 - Categorias
 - Produtos
@@ -179,50 +197,61 @@ Um produto pode possuir várias movimentações.
 
 Um usuário pode ser responsável por várias movimentações.
 
+As Foreign Keys são utilizadas para preservar a integridade dos relacionamentos.
+
 ---
 
 ## Regras de Negócio
 
 ### Produtos
 
-- O nome do produto é obrigatório.
-- O SKU deve ser único.
-- Todo produto deve pertencer a uma categoria existente.
-- Produtos inativos não podem receber movimentações.
-- O estoque nunca pode ficar negativo.
+- Nome obrigatório
+- SKU único
+- Produto deve pertencer a uma categoria existente
+- Estoque não pode ficar negativo
+- Produtos podem ser desativados
+- Produtos inativos não podem receber movimentações
+- Produtos com histórico não são removidos fisicamente
 
 ### Usuários
 
-- Nome é obrigatório.
-- CPF é obrigatório.
-- CPF deve possuir formato válido.
-- CPF deve ser único.
-- Telefone é obrigatório.
-- CPF não pode ser alterado após o cadastro.
-- Usuários podem ser ativados ou desativados.
-- Usuários inativos não podem realizar movimentações.
-- A desativação de um usuário não remove seu histórico.
+- Nome obrigatório
+- CPF obrigatório
+- CPF deve possuir 11 dígitos numéricos
+- CPF deve ser único
+- Telefone obrigatório
+- CPF não pode ser alterado pelo endpoint de atualização
+- Usuários podem ser ativados e desativados
+- Usuários inativos não podem realizar movimentações
+- A desativação não remove o histórico do usuário
 
 ### Movimentações
 
 Toda movimentação registra:
 
-- Produto
-- Usuário responsável
-- Tipo (`ENTRADA` ou `SAIDA`)
-- Quantidade
-- Estoque anterior
-- Estoque atual
-- Observação
-- Data e horário
+- produto;
+- usuário responsável;
+- tipo;
+- quantidade;
+- estoque anterior;
+- estoque atual;
+- observação;
+- data e horário.
 
-Uma saída só pode ser realizada quando houver estoque suficiente.
+Tipos disponíveis:
 
-A atualização do estoque e o registro da movimentação fazem parte da mesma operação, utilizando controle transacional para preservar a consistência dos dados.
+```text
+ENTRADA
+SAIDA
+```
+
+Uma saída somente é permitida quando existe estoque suficiente.
+
+A atualização do estoque e o registro da movimentação fazem parte da mesma operação, utilizando transações para preservar a consistência dos dados.
 
 ---
 
-## Endpoints
+## Principais Endpoints
 
 ### Categorias
 
@@ -231,7 +260,6 @@ POST   /categorias
 GET    /categorias
 GET    /categorias/{id}
 PUT    /categorias/{id}
-DELETE /categorias/{id}
 ```
 
 ### Produtos
@@ -241,7 +269,7 @@ POST   /produtos
 GET    /produtos
 GET    /produtos/{id}
 PUT    /produtos/{id}
-DELETE /produtos/{id}
+PATCH  /produtos/{id}/status
 ```
 
 ### Usuários
@@ -262,7 +290,7 @@ GET    /movimentacoes
 GET    /movimentacoes/{id}
 ```
 
-A documentação interativa completa dos endpoints está disponível através do Swagger após iniciar a aplicação.
+A documentação interativa completa pode ser consultada pelo Swagger.
 
 ---
 
@@ -274,13 +302,13 @@ A documentação interativa completa dos endpoints está disponível através do
 git clone https://github.com/borges1202/sistema-de-gestao-de-estoque.git
 ```
 
-### 2. Entre no diretório
+### 2. Entre no projeto
 
 ```bash
 cd sistema-de-gestao-de-estoque
 ```
 
-### 3. Crie o ambiente virtual
+### 3. Crie um ambiente virtual
 
 #### Windows
 
@@ -308,7 +336,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### 6. Acesse o Swagger
+### 6. Acesse a documentação
 
 ```text
 http://127.0.0.1:8000/docs
@@ -322,13 +350,14 @@ http://127.0.0.1:8000/docs
 | --- | --- |
 | Categorias | Concluído |
 | Produtos | Concluído |
-| Movimentações | Concluído |
 | Usuários | Concluído |
-| Refatoração em Repositories | Em desenvolvimento |
-| Soft Delete | Planejado |
-| Testes automatizados | Planejado |
+| Movimentações | Concluído |
+| Repositories | Concluído |
+| Soft Delete de Produtos | Concluído |
+| Soft Delete de Categorias | Planejado |
+| Testes Automatizados | Planejado |
 | Autenticação JWT | Planejado |
-| Controle de permissões | Planejado |
+| Controle de Permissões | Planejado |
 | PostgreSQL | Planejado |
 | Docker | Planejado |
 | Deploy | Planejado |
@@ -337,19 +366,22 @@ http://127.0.0.1:8000/docs
 
 ## Roadmap
 
-### Etapa atual
+### Concluído
 
 - [x] CRUD de categorias
 - [x] CRUD de produtos
-- [x] Controle de movimentações
 - [x] CRUD de usuários
+- [x] Controle de movimentações
+- [x] Controle de entrada e saída de estoque
+- [x] Histórico de movimentações
 - [x] Ativação e desativação de usuários
-- [x] Integração entre usuários e movimentações
-- [ ] Separação da camada de acesso aos dados com Repositories
+- [x] Soft Delete de produtos
+- [x] Separação da camada de acesso aos dados com Repositories
+- [x] Controle transacional das movimentações
 
 ### Próximas etapas
 
-- [ ] Soft Delete de produtos
+- [ ] Revisar necessidade de uma camada de Services
 - [ ] Soft Delete de categorias
 - [ ] Testes automatizados
 - [ ] Autenticação JWT
@@ -362,10 +394,10 @@ http://127.0.0.1:8000/docs
 
 ## Documentação
 
-A documentação técnica do projeto está disponível no diretório `docs/`:
+A documentação técnica está disponível no diretório `docs/`:
 
-- `PRD.md` — requisitos e escopo do produto
-- `DATABASE.md` — estrutura do banco de dados
+- `PRD.md` — requisitos e escopo do sistema
+- `DATABASE.md` — estrutura e relacionamentos do banco
 - `ARCHITECTURE.md` — arquitetura e organização do projeto
 
 ---
