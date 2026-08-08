@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.schemas.movimentacoes import MovimentacoesCreate, MovimentacoesResponse
 from app.database.connection import conectar
 from datetime import datetime
+from app.repositories.movimentacao_repository import buscar_produto_movimentacao, buscar_usuario_movimentacao, modificar_produto_movimentacao, inserir_movimentacao, buscar_movimentacoes, buscar_movimentacao
 
 router = APIRouter()
 
@@ -14,35 +15,30 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute(
-            """SELECT ativo, quantidade  FROM produtos WHERE id = ?""",
-            (movimentacoes.produto_id,),
-        )
-        resultado_produtos = cursor.fetchone()
+        resultado_busca_produto = buscar_produto_movimentacao(
+            cursor, movimentacoes.produto_id)
 
-        if resultado_produtos is None:
+        if resultado_busca_produto is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado."
             )
 
-        ativo, estoque_anterior = resultado_produtos
+        produto_ativo, estoque_anterior = resultado_busca_produto
 
-        if ativo is False:
+        if produto_ativo == 0:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Produto inativo."
             )
 
-        cursor.execute(
-            """SELECT ativo FROM usuarios WHERE id = ?""", (movimentacoes.usuario_id,)
-        )
-        resultado_usuario = cursor.fetchone()
+        resultado_busca_usuario = buscar_usuario_movimentacao(
+            cursor, movimentacoes.usuario_id)
 
-        if resultado_usuario is None:
+        if resultado_busca_usuario is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Usuario não encontrado"
             )
 
-        usario_ativo, = resultado_usuario
+        usario_ativo, = resultado_busca_usuario
 
         if usario_ativo == 0:
             raise HTTPException(
@@ -62,37 +58,15 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Estoque insuficiente para realizar a saída.",
                 )
-            
+
             else:
                 estoque_atual = estoque_anterior - movimentacoes.quantidade
 
-        cursor.execute(
-            """UPDATE produtos SET quantidade = ?, atualizado_em = ? WHERE id = ?""",
-            (estoque_atual, datetime.now(), movimentacoes.produto_id),
-        )
+        modificar_produto_movimentacao(
+            cursor, estoque_atual, datetime.now(), movimentacoes.produto_id)
 
-        cursor.execute(
-            """INSERT INTO movimentacoes(
-            produto_id,
-            usuario_id,
-            tipo,
-            quantidade,
-            estoque_anterior,
-            estoque_atual,
-            observacao
-            ) 
-            VALUES(?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                movimentacoes.produto_id,
-                movimentacoes.usuario_id,
-                tipo,
-                movimentacoes.quantidade,
-                estoque_anterior,
-                estoque_atual,
-                movimentacoes.observacao,
-            ),
-        )
+        inserir_movimentacao(cursor, movimentacoes.produto_id, movimentacoes.usuario_id, tipo,
+                             movimentacoes.quantidade, estoque_anterior, estoque_atual, movimentacoes.observacao,)
 
         conexao.commit()
         return {"mensagem": f"{tipo} Bem sucedida"}
@@ -114,7 +88,6 @@ def criar_movimentacao(movimentacoes: MovimentacoesCreate):
             conexao.close()
 
 
-
 @router.get("/movimentacoes", response_model=list[MovimentacoesResponse])
 def listar_movimentacoes():
     conexao = None
@@ -122,11 +95,8 @@ def listar_movimentacoes():
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute("""SELECT 
-                       id, produto_id, usuario_id, tipo, quantidade, estoque_anterior, estoque_atual, observacao, criado_em
-                       FROM movimentacoes""")
+        resultados = buscar_movimentacoes(cursor)
 
-        resultados = cursor.fetchall()
         resultados_lista = []
 
         for resultado in resultados:
@@ -141,6 +111,7 @@ def listar_movimentacoes():
                 observacao,
                 criado_em,
             ) = resultado
+
             resultado = {
                 "id": id,
                 "produto_id": produto_id,
@@ -163,7 +134,6 @@ def listar_movimentacoes():
             conexao.close()
 
 
-
 @router.get("/movimentacoes/{id}", response_model=MovimentacoesResponse)
 def listar_movimentacao_id(id: int):
     conexao = None
@@ -171,16 +141,8 @@ def listar_movimentacao_id(id: int):
         conexao = conectar()
         cursor = conexao.cursor()
 
-        cursor.execute(
-            """SELECT 
-                       id, produto_id, usuario_id, tipo, quantidade, estoque_anterior, estoque_atual, observacao, criado_em
-                       FROM movimentacoes
-          WHERE id = ?
-          """,
-            (id,),
-        )
+        resultado = buscar_movimentacao(cursor, id)
 
-        resultado = cursor.fetchone()
         if resultado is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
